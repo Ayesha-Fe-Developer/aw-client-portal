@@ -1,26 +1,33 @@
-import axios from "axios";
+const API_URL = "http://127.0.0.1:5000";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
-
-export const generateSACS = async (data: object) => {
-  const response = await axios.post(`${API_URL}/generate/sacs`, data, {
-    responseType: "blob",
+export const generateSACS = async (data: object): Promise<Blob> => {
+  const response = await fetch(`${API_URL}/generate/sacs`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
   });
-  return response.data;
+  const blob = await response.blob();
+  return blob;
 };
 
-export const generateTCC = async (data: object) => {
-  const response = await axios.post(`${API_URL}/generate/tcc`, data, {
-    responseType: "blob",
+export const generateTCC = async (data: object): Promise<Blob> => {
+  const response = await fetch(`${API_URL}/generate/tcc`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
   });
-  return response.data;
+  const blob = await response.blob();
+  return blob;
 };
 
 export const downloadPDF = (blob: Blob, filename: string) => {
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
-  window.URL.revokeObjectURL(url);
+  // Open in new tab instead of downloading — bypasses IDM
+  const url = window.URL.createObjectURL(
+    new Blob([blob], { type: "application/pdf" }),
+  );
+  window.open(url, "_blank");
 };

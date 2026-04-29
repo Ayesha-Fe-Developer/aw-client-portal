@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { generateSACS, generateTCC, downloadPDF } from "../utils/api";
 
 const mockClient = {
   id: 1,
@@ -30,6 +31,75 @@ const mockClient = {
 };
 
 export default function GenerateReport() {
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    setError("");
+    try {
+      const quarter = `Q${Math.ceil((new Date().getMonth() + 1) / 3)} ${new Date().getFullYear()}`;
+
+      const payload = {
+        clientName: `${mockClient.client1FirstName} & ${mockClient.client2FirstName} ${mockClient.client1LastName}`,
+        quarter,
+        client1Name: mockClient.client1FirstName,
+        client2Name: mockClient.client2FirstName,
+        client1DOB: mockClient.client1DOB,
+        client2DOB: mockClient.client2DOB,
+        client1Age: String(
+          new Date().getFullYear() -
+            new Date(mockClient.client1DOB).getFullYear(),
+        ),
+        client2Age: String(
+          new Date().getFullYear() -
+            new Date(mockClient.client2DOB).getFullYear(),
+        ),
+        client1SSN: mockClient.client1SSN,
+        client2SSN: mockClient.client2SSN,
+        inflow: mockClient.monthlyInflow,
+        outflow: mockClient.monthlyOutflow,
+        excess: excess,
+        privateReserveBalance: privateReserveBalance,
+        privateReserveTarget: mockClient.privateReserveTarget,
+        retirementAccounts: mockClient.retirementAccounts.map((acc) => ({
+          ...acc,
+          balance: getVal(`retirement_${acc.lastFour}`),
+        })),
+        nonRetirementAccounts: mockClient.nonRetirementAccounts.map((acc) => ({
+          ...acc,
+          balance: getVal(`nonretirement_${acc.lastFour}`),
+        })),
+        liabilities: mockClient.liabilities.map((lib) => ({
+          ...lib,
+          balance: getVal(`liability_${lib.type}`),
+        })),
+        trust: mockClient.hasTrust
+          ? {
+              address: mockClient.propertyAddress,
+              value: getVal("trust"),
+            }
+          : null,
+      };
+
+      // Generate both PDFs
+      const [sacsBlob, tccBlob] = await Promise.all([
+        generateSACS(payload),
+        generateTCC(payload),
+      ]);
+
+      downloadPDF(
+        sacsBlob,
+        `SACS_${mockClient.client1LastName}_${quarter}.pdf`,
+      );
+      downloadPDF(tccBlob, `TCC_${mockClient.client1LastName}_${quarter}.pdf`);
+    } catch (err) {
+      setError("Failed to generate PDFs. Make sure the backend is running.");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -109,12 +179,25 @@ export default function GenerateReport() {
             </p>
           </div>
         </div>
-        <button
-          disabled={!canGenerate}
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition ${canGenerate ? "bg-blue-700 text-white hover:bg-blue-800" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}
-        >
-          Generate PDFs
-        </button>
+        {/* Generate Button */}
+        <div className="flex flex-col items-end gap-2">
+          {error && <p className="text-sm text-red-500">{error}</p>}
+          <button
+            onClick={handleGenerate}
+            disabled={!canGenerate || generating}
+            className={`px-6 py-3 rounded-xl text-sm font-semibold transition ${
+              canGenerate && !generating
+                ? "bg-blue-700 text-white hover:bg-blue-800"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            {generating
+              ? "⏳ Generating PDFs..."
+              : canGenerate
+                ? "⬇ Generate & Download PDFs"
+                : "Fill all fields to generate"}
+          </button>
+        </div>
       </div>
 
       <div className="max-w-3xl mx-auto px-8 py-10 flex flex-col gap-8">
