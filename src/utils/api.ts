@@ -25,9 +25,14 @@ export const generateTCC = async (data: object): Promise<Blob> => {
 };
 
 export const downloadPDF = (blob: Blob, filename: string) => {
-  // Open in new tab instead of downloading — bypasses IDM
   const url = window.URL.createObjectURL(
     new Blob([blob], { type: "application/pdf" }),
   );
-  window.open(url, "_blank");
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
 };
