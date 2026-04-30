@@ -4,36 +4,43 @@ from pdf_generators.sacs import generate_sacs_pdf
 from pdf_generators.tcc import generate_tcc_pdf
 
 app = Flask(__name__)
-CORS(app, origins=["https://incandescent-moonbeam-8f7854.netlify.app", "http://localhost:5173"])
-
-@app.after_request
-def add_cors(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    return response
+CORS(app)
 
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({'status': 'ok'})
 
-@app.route('/generate/sacs', methods=['POST'])
+@app.route('/generate/sacs', methods=['POST', 'OPTIONS'])
 def generate_sacs():
+    if request.method == 'OPTIONS':
+        response = make_response()
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        return response, 200
     data = request.get_json()
     pdf_buffer = generate_sacs_pdf(data)
     pdf_bytes = pdf_buffer.read()
     response = make_response(pdf_bytes)
+    response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = 'inline; filename=SACS.pdf'
     response.headers['Content-Length'] = len(pdf_bytes)
     return response
 
-@app.route('/generate/tcc', methods=['POST'])
+@app.route('/generate/tcc', methods=['POST', 'OPTIONS'])
 def generate_tcc():
+    if request.method == 'OPTIONS':
+        response = make_response()
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        return response, 200
     data = request.get_json()
     pdf_buffer = generate_tcc_pdf(data)
     pdf_bytes = pdf_buffer.read()
     response = make_response(pdf_bytes)
+    response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = 'inline; filename=TCC.pdf'
     response.headers['Content-Length'] = len(pdf_bytes)
