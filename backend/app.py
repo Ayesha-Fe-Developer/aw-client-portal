@@ -4,10 +4,11 @@ from pdf_generators.sacs import generate_sacs_pdf
 from pdf_generators.tcc import generate_tcc_pdf
 
 app = Flask(__name__)
+CORS(app, origins=["https://incandescent-moonbeam-8f7854.netlify.app", "http://localhost:5173"])
 
 @app.after_request
 def add_cors(response):
-    response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
+    response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
     return response
