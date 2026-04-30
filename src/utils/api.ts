@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:5000";
+const API_URL = "https://aw-client-portal-production.up.railway.app";
 
 export const generateSACS = async (data: object): Promise<Blob> => {
   const response = await fetch(`${API_URL}/generate/sacs`, {
