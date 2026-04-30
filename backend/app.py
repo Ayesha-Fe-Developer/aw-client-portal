@@ -1,4 +1,6 @@
 from flask import Flask, request, make_response, jsonify
+import logging
+logging.basicConfig(level=logging.DEBUG)
 from pdf_generators.sacs import generate_sacs_pdf
 from pdf_generators.tcc import generate_tcc_pdf
 import os
@@ -41,5 +43,5 @@ def generate_tcc():
     return corsify(response)
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port, debug=False)
